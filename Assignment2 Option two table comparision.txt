@@ -1,0 +1,68 @@
+
+
+
+For instance, suppose you have two databases:
+
+Test database contains the table:
+
+create table test(id int, orphansname varchar(10), dep varchar(50));
+and another database:
+
+anotherdatabase database contains the table:
+
+create table testings(id int,orphansname varchar(20), age int);
+And you want to compare the two tables' columns and get the tables that don't exist in the other table, in our example you need to get age and dep.
+
+Then you can do this:
+
+SELECT ColumnName
+FROM
+(
+    SELECT  c.name "ColumnName"
+    FROM test.sys.tables t
+    INNER JOIN test.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN test.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = 'test'
+    EXCEPT
+    SELECT  c.name
+    FROM anotherdatabase.sys.tables t
+    INNER JOIN anotherdatabase.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN anotherdatabase.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = 'testings'
+) t1
+UNION ALL
+SELECT ColumnName
+FROM
+(
+    SELECT  c.name ColumnName
+    FROM anotherdatabase.sys.tables t
+    INNER JOIN anotherdatabase.sys.all_columns c  
+            ON t.object_id = c.object_id
+    INNER JOIN anotherdatabase.sys.types ty      
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = 'testings'
+    EXCEPT
+    SELECT  c.name
+    FROM test.sys.tables t
+    INNER JOIN test.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN test.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = 'test'
+) t2;
+
+========================================================
+
+To compare columns use INFORMATION_SCHEMA.COLUMNS table in a SQL SERVER.
+
+This is the exmaple:
+
+select orphan_name from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='your_table_name1'
+except
+select orphan_name from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME='your_table_name2'
+
+=======================
